@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Stripe Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 50px;
+      }
+      input,
+      button {
+        padding: 10px;
+        margin: 5px;
+        font-size: 16px;
+      }
+      #message {
+        margin-top: 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Pay with Stripe</h1>
+
+    <label for="amount">Enter Amount (e.g., 10.50 for $10.50):</label>
+    <input
+      type="number"
+      id="amount"
+      placeholder="10.00"
+      step="0.01"
+      min="0.50"
+      value="10.00"
+    />
+
+    <button id="checkout-button">Checkout</button>
+
+    <div id="message"></div>
+
+    <script>
+      // IMPORTANT: Replace with YOUR Stripe Publishable Key
+      const stripePublishableKey =
+        "pk_test_51RMCAQPEx2BEmQNxOJ259sjGSBqeyIvliZ4Wa55Ln9wvSoTXYS9uMqhbEYUC9SWzyTE1LYKxZ0qOEsn5Q46lDjJM00sLEAEamY";
+      const stripe = Stripe(stripePublishableKey);
+      const checkoutButton = document.getElementById("checkout-button");
+      const amountInput = document.getElementById("amount");
+      const messageDiv = document.getElementById("message");
+
+      // Check for status messages from Stripe redirect
+      window.onload = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get("status");
+        const sessionId = urlParams.get("session_id");
+
+        if (status === "success") {
+          messageDiv.textContent = `Payment successful! Session ID: ${sessionId}`;
+          messageDiv.style.color = "green";
+        } else if (status === "cancel") {
+          messageDiv.textContent = "Payment cancelled or failed.";
+          messageDiv.style.color = "red";
+        }
+      };
+
+      checkoutButton.addEventListener("click", async () => {
+        const amount = parseFloat(amountInput.value);
+        messageDiv.textContent = ""; // Clear previous messages
+
+        if (isNaN(amount) || amount < 0.5) {
+          // Stripe typically requires a minimum amount (e.g., $0.50)
+          messageDiv.textContent =
+            "Please enter a valid amount (at least $0.50).";
+          messageDiv.style.color = "red";
+          return;
+        }
+
+        // Convert amount to cents
+        const amountInCents = Math.round(amount * 100);
+
+        try {
+          checkoutButton.disabled = true;
+          checkoutButton.textContent = "Processing...";
+
+          // Call our Cloudflare Function to create the Checkout Session
+          const response = await fetch("/api/create-checkout-session", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ amount: amountInCents, currency: "usd" }), // Send amount in cents
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.error || `Server error: ${response.status}`
+            );
+          }
+
+          const session = await response.json();
+
+          // Redirect to Stripe Checkout
+          const { error } = await stripe.redirectToCheckout({
+            sessionId: session.id,
+          });
+
+          if (error) {
+            console.error("Stripe redirectToCheckout error:", error);
+            messageDiv.textContent = `Error: ${error.message}`;
+            messageDiv.style.color = "red";
+          }
+        } catch (error) {
+          console.error("Error creating checkout session:", error);
+          messageDiv.textContent = `Error: ${error.message}`;
+          messageDiv.style.color = "red";
+        } finally {
+          checkoutButton.disabled = false;
+          checkoutButton.textContent = "Checkout";
+        }
+      });
+    </script>
+  </body>
+</html>
