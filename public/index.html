@@ -75,10 +75,10 @@
     <!-- RESPONSIVE CSS -->
     <link href="css/responsive.css" rel="stylesheet" />
 
-    <script defer src="./js/script.js"></script>
+    <!-- <script defer src="./js/script.js"></script> -->
     <!-- <script src="https://js.stripe.com/v3/"></script> -->
     <!-- <script defer src="js/stripe.js"></script> -->
-       <script src="https://www.paypal.com/sdk/js?client-id=AUt5Nw9DMD9L0oIGCODEL2H-7Z7PhDvGKAexAkd8wvO5yq24jFwK5YVNJFY0R_nqBTu9pDUS9jFtOpFX&currency=USD"></script>
+      
 
   </head>
 
@@ -144,7 +144,7 @@
               <!-- ABOUT US LINK -->
               <li><a href="#about-3">About Us</a></li>
 
-              <li class="popup-open"><a href="#"> Order</a></li>
+              <li><a href="./order.html"> Order</a></li>
 
               <!-- BASKET ICON -->
               <li style="color: #f7be27 !important">
@@ -164,7 +164,7 @@
     <!-- PAGE CONTENT
 		============================================= -->
     <div id="page" class="page">
-      <div class="popup">
+      <!-- <div class="popup">
         <h3>Select Order Value</h3>
         <input id="amount" type="number"/>
         <div class="btn-group">
@@ -177,7 +177,7 @@
           </button>
         </div>
         <div id="message"></div>
-      </div>
+      </div> -->
       <!-- HERO-6
 			============================================= -->
       <section id="hero-6" class="hero-section division">
@@ -529,48 +529,7 @@
     <!-- EXTERNAL SCRIPTS
 		============================================= -->
 
-    <script>
-
-      const checkoutButton = document.getElementById("checkout-button");
-      // const messageDiv = document.getElementById("message");
-
-    const paypalContainer = document.getElementById('paypal-button-container');
-
-    checkoutButton.addEventListener('click', () => {
-      const amount = parseFloat(document.getElementById('amount').value);
-
-      if (isNaN(amount) || amount <= 0) {
-        alert("Please enter a valid amount.");
-        return;
-      }
-
-      // Clear previous buttons if any
-      paypalContainer.innerHTML = '';
-
-      paypal.Buttons({
-        createOrder: function(data, actions) {
-          return actions.order.create({
-            purchase_units: [{
-              amount: {
-                value: amount.toFixed(2) // 2 decimal places
-              }
-            }]
-          });
-        },
-        onApprove: function(data, actions) {
-          return actions.order.capture().then(function(details) {
-            alert('Transaction completed by ' + details.payer.name.given_name);
-            console.log(details);
-          });
-        },
-        onError: function(err) {
-          console.error(err);
-          alert('Something went wrong');
-        }
-      }).render('#paypal-button-container');
-    });
-    </script>
-
+   
     <!-- <script>
       const stripePublishableKey =
         "pk_live_51RHLVVBlfdlaxVvYtVF3OIVZBtxSlx8IPfEZbhbQDCJcjzJOUrHN0NiUr2X0QfHCSNNMHZVwXEMaFpfdV8moppHl00L2fSAlQ4";
